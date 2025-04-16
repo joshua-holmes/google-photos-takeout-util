@@ -1,5 +1,7 @@
 # Google Photos Takeout Util
 
+_NOTE: This project is in development. It cannot be used at this moment. Feel free to create issues with features you hope to see, and I will consider adding them to the feature list below!_
+
 ## Disclaimers
 
 This project has no affiliation with Google and is not endorsed by them. This is my own personal project that I made to solve a problem I had with Google Photos.
