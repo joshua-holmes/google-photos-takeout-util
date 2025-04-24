@@ -6,6 +6,7 @@ use std::{path::PathBuf, sync::mpsc, thread::JoinHandle};
 use eframe::egui;
 
 mod views;
+mod services;
 
 fn main() -> eframe::Result {
     let options = eframe::NativeOptions {
