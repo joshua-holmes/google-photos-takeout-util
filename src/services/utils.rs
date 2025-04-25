@@ -47,23 +47,50 @@ pub fn unzip(zip_path: &Path) -> Vec<std::path::PathBuf> {
 
 #[cfg(test)]
 mod tests {
+    use std::path::PathBuf;
+
     use super::*;
     #[test]
     fn unzip_returns_correct_number_of_files() {
-        let outpaths = unzip(Path::new("./test-assets/takeout.zip"));
+        // copy zip for use in tests
+        let original = "./test-assets/takeout.zip";
+        let test_dir = "./test-assets/unzip_returns_correct_number_of_files";
+        let test_zip = test_dir.to_string() + ".zip";
+        fs::copy(original, &test_zip).unwrap();
+
+        // unzip
+        let outpaths = unzip(Path::new(&test_zip));
+
+        // assert
         assert_eq!(outpaths.len(), 8);
 
-        fs::remove_dir_all("./test-assets/takeout/").unwrap();
+        // cleanup
+        fs::remove_dir_all(test_dir).unwrap();
+        fs::remove_file(test_zip).unwrap();
     }
 
     #[test]
     fn unzip_keeps_directory_structure() {
-        unzip(Path::new("./test-assets/takeout.zip"));
+        // copy zip for use in tests
+        let original = "./test-assets/takeout.zip";
+        let test_dir = "./test-assets/unzip_keeps_directory_structure";
+        let test_zip = test_dir.to_string() + ".zip";
+        fs::copy(original, &test_zip).unwrap();
 
-        let other_dir = Path::new("./test-assets/takeout/takeout/other");
+        // unzip
+        unzip(Path::new(&test_zip));
+
+        // assert
+        let other_dir = PathBuf::from(test_dir.to_string() + "/takeout/other");
         assert!(other_dir.exists());
         assert!(other_dir.is_dir());
 
-        fs::remove_dir_all("./test-assets/takeout/").unwrap();
+        let other_dir = PathBuf::from(test_dir.to_string() + "/takeout/edited");
+        assert!(other_dir.exists());
+        assert!(other_dir.is_dir());
+
+        // cleanup
+        fs::remove_dir_all(test_dir).unwrap();
+        fs::remove_file(test_zip).unwrap();
     }
 }
