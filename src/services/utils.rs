@@ -1,4 +1,6 @@
-use std::{fs, io, path::Path};
+use std::{collections::VecDeque, fs, io, path::Path};
+
+use super::errors::MatchingError;
 
 pub fn unzip(zip_path: &Path) -> Vec<std::path::PathBuf> {
     let file = fs::File::open(zip_path).unwrap();
@@ -44,12 +46,86 @@ pub fn unzip(zip_path: &Path) -> Vec<std::path::PathBuf> {
     outpaths
 }
 
+pub fn collect_filenames(path: &Path) -> std::io::Result<Vec<std::path::PathBuf>> {
+    let mut paths = Vec::new();
+    let mut queue = VecDeque::from([path.to_owned()]);
+    while let Some(path) = queue.pop_back() {
+        for maybe_dir in fs::read_dir(&path)? {
+            let dir = maybe_dir?;
+            if dir.path().is_file() {
+                paths.push(dir.path());
+            } else if dir.path().is_dir() {
+                queue.push_front(dir.path());
+            }
+        }
+    }
+
+    Ok(paths)
+}
+
 
 #[cfg(test)]
 mod tests {
-    use std::path::PathBuf;
-
+    use std::{collections::HashSet, path::PathBuf};
     use super::*;
+
+    #[test]
+    fn collect_filenames_returns_correct_number_of_files() {
+        let paths = collect_filenames(Path::new("./test-assets/takeout-unzipped/")).unwrap();
+
+        assert_eq!(paths.len(), 8);
+    }
+
+    #[test]
+    fn collect_filenames_returns_valid_paths() {
+        let paths = collect_filenames(Path::new("./test-assets/takeout-unzipped/")).unwrap();
+
+        for p in paths {
+            assert!(p.exists());
+            assert!(p.is_file());
+        }
+    }
+
+    #[test]
+    fn collect_filenames_returns_same_results_as_unzip() {
+        // copy zip for use in tests
+        let original = "./test-assets/takeout.zip";
+        let test_dir = "./test-assets/collect_filenames_returns_same_results_as_unzip";
+        let test_zip = test_dir.to_string() + ".zip";
+        fs::copy(original, &test_zip).unwrap();
+
+        let unzip_paths = unzip(Path::new(&test_zip));
+        let paths = collect_filenames(Path::new("./test-assets/takeout-unzipped/")).unwrap();
+
+        // ensure both return same number of files
+        assert_eq!(unzip_paths.len(), paths.len());
+
+        // put just the file names in hash sets
+        let mut unziped_filenames = HashSet::new();
+        let mut filenames = HashSet::new();
+        for p in unzip_paths.iter() {
+            unziped_filenames.insert(p.file_name().unwrap());
+        }
+        for p in paths.iter() {
+            filenames.insert(p.file_name().unwrap());
+        }
+
+        // compare hash sets
+        for p in unziped_filenames.iter() {
+            println!("Ensuring {:?}, which was unzipped, is in other directory.", p.display());
+            assert!(filenames.contains(p));
+        }
+        for p in filenames.iter() {
+            println!("Ensuring {:?}, which is in regular directory, is found in unzipped directory.", p.display());
+            assert!(unziped_filenames.contains(p));
+        }
+
+
+        // cleanup
+        fs::remove_dir_all(test_dir).unwrap();
+        fs::remove_file(test_zip).unwrap();
+    }
+
     #[test]
     fn unzip_returns_correct_number_of_files() {
         // copy zip for use in tests
