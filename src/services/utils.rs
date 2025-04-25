@@ -1,7 +1,5 @@
 use std::{collections::VecDeque, fs, io, path::Path};
 
-use super::errors::MatchingError;
-
 pub fn unzip(zip_path: &Path) -> Vec<std::path::PathBuf> {
     let file = fs::File::open(zip_path).unwrap();
     let mut archive = zip::ZipArchive::new(file).unwrap();
@@ -46,7 +44,8 @@ pub fn unzip(zip_path: &Path) -> Vec<std::path::PathBuf> {
     outpaths
 }
 
-pub fn collect_filenames(path: &Path) -> std::io::Result<Vec<std::path::PathBuf>> {
+/// Recursively read a given directory and return vector of all file names.
+pub fn recursively_collect_filenames(path: &Path) -> std::io::Result<Vec<std::path::PathBuf>> {
     let mut paths = Vec::new();
     let mut queue = VecDeque::from([path.to_owned()]);
     while let Some(path) = queue.pop_back() {
@@ -71,14 +70,14 @@ mod tests {
 
     #[test]
     fn collect_filenames_returns_correct_number_of_files() {
-        let paths = collect_filenames(Path::new("./test-assets/takeout-unzipped/")).unwrap();
+        let paths = recursively_collect_filenames(Path::new("./test-assets/takeout-unzipped/")).unwrap();
 
         assert_eq!(paths.len(), 8);
     }
 
     #[test]
     fn collect_filenames_returns_valid_paths() {
-        let paths = collect_filenames(Path::new("./test-assets/takeout-unzipped/")).unwrap();
+        let paths = recursively_collect_filenames(Path::new("./test-assets/takeout-unzipped/")).unwrap();
 
         for p in paths {
             assert!(p.exists());
@@ -95,7 +94,7 @@ mod tests {
         fs::copy(original, &test_zip).unwrap();
 
         let unzip_paths = unzip(Path::new(&test_zip));
-        let paths = collect_filenames(Path::new("./test-assets/takeout-unzipped/")).unwrap();
+        let paths = recursively_collect_filenames(Path::new("./test-assets/takeout-unzipped/")).unwrap();
 
         // ensure both return same number of files
         assert_eq!(unzip_paths.len(), paths.len());
