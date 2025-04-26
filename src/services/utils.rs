@@ -126,4 +126,23 @@ mod tests {
         fs::remove_dir_all(test_dir).unwrap();
         fs::remove_file(test_zip).unwrap();
     }
+
+    #[test]
+    fn unzip_over_already_unzipped_dir() {
+        // copy zip for use in tests
+        let original = "./test-assets/takeout.zip";
+        let test_dir = "./test-assets/unzip_over_already_unzipped_dir";
+        let test_zip = test_dir.to_string() + ".zip";
+        fs::copy(original, &test_zip).unwrap();
+
+        // unzip
+        unzip(Path::new(&test_zip));
+
+        // unzip again
+        unzip(Path::new(&test_zip));
+
+        // cleanup
+        fs::remove_dir_all(test_dir).unwrap();
+        fs::remove_file(test_zip).unwrap();
+    }
 }
