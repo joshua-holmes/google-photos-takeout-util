@@ -1,4 +1,4 @@
-use std::{collections::{HashMap, HashSet}, path::{Path, PathBuf}};
+use std::{collections::{HashMap, HashSet}, fs, io::Read, path::{Path, PathBuf}};
 
 
 /// A struct for holding the paths of json files and their corresponding images. It is possible for a json file to be
@@ -14,13 +14,36 @@ pub struct Pair {
     pub img_edited: Option<PathBuf>,
 }
 impl Pair {
-    fn new() -> Self {
+    pub fn new() -> Self {
         Pair {
             json: None,
             img: None,
             img_edited: None,
         }
     }
+
+    /// Read json file, if present. Returns `None` if `self.json` is `None`. Returns error if there was an error
+    /// reading the json file.
+    pub fn read_json(&self) -> Option<Result<String, PairError>> {
+        if let Some(path) = self.json.as_ref() {
+            let mut file = fs::File::open(path).unwrap();
+            let mut contents = Vec::new();
+            if let Err(e) = file.read_to_end(&mut contents) {
+                return Some(Err(PairError::IoError(e)));
+            }
+            match String::from_utf8(contents) {
+                Ok(c) => Some(Ok(c)),
+                Err(e) => Some(Err(PairError::Utf8ParsingError(e))),
+            }
+        } else {
+            None
+        }
+    }
+}
+
+pub enum PairError {
+    IoError(std::io::Error),
+    Utf8ParsingError(std::string::FromUtf8Error),
 }
 
 pub enum PairComponent {
@@ -51,7 +74,6 @@ pub fn create_pairs(set: HashSet<PathBuf>) -> HashMap<String, Pair> {
             (dir.join(naked_key).to_str().unwrap().to_string(), PairComponent::Img)
         };
 
-        println!("KEY {}", key);
         let pair = pairs.entry(key).or_insert(Pair::new());
         match component {
             PairComponent::Img => pair.img = Some(p),
