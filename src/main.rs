@@ -4,9 +4,10 @@
 use std::{path::PathBuf, sync::mpsc, thread::JoinHandle};
 
 use eframe::egui;
+use views::View;
 
-mod views;
 mod services;
+mod views;
 
 fn main() -> eframe::Result {
     let options = eframe::NativeOptions {
@@ -26,6 +27,12 @@ fn main() -> eframe::Result {
 
 #[derive(Default)]
 struct MyApp {
+    current_view: View,
+    app_state: AppState,
+}
+
+#[derive(Default)]
+struct AppState {
     dropped_files: Vec<egui::DroppedFile>,
     picked_path: Option<PathBuf>,
     rx: Option<mpsc::Receiver<PathBuf>>,
@@ -35,8 +42,7 @@ struct MyApp {
 impl eframe::App for MyApp {
     fn update(&mut self, ctx: &egui::Context, _frame: &mut eframe::Frame) {
         egui::CentralPanel::default().show(ctx, |ui| {
-            views::file_picker::show(self, ctx, ui);
+            self.current_view.show(&mut self.app_state, ctx, ui);
         });
     }
 }
-

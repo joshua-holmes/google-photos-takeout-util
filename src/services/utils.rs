@@ -1,10 +1,17 @@
-use std::{collections::{HashSet, VecDeque}, fs, io, path::Path};
+use std::{
+    collections::{HashSet, VecDeque},
+    fs, io,
+    path::Path,
+};
 
 /// Unzips given zip file, creating a new directory for unzipped contents and only keeping files (not empty directories).
 pub fn unzip(zip_path: &Path) -> std::path::PathBuf {
     let file = fs::File::open(zip_path).unwrap();
     let mut archive = zip::ZipArchive::new(file).unwrap();
-    let working_dir = zip_path.parent().unwrap().join(zip_path.file_stem().unwrap());
+    let working_dir = zip_path
+        .parent()
+        .unwrap()
+        .join(zip_path.file_stem().unwrap());
     fs::create_dir_all(&working_dir).unwrap();
     for i in 0..archive.len() {
         let mut file = archive.by_index(i).unwrap();
@@ -61,22 +68,23 @@ pub fn recursively_collect_filenames(path: &Path) -> std::io::Result<HashSet<std
     Ok(paths)
 }
 
-
 #[cfg(test)]
 mod tests {
-    use std::path::PathBuf;
     use super::*;
+    use std::path::PathBuf;
 
     #[test]
     fn collect_filenames_returns_correct_number_of_files() {
-        let paths = recursively_collect_filenames(Path::new("./test-assets/takeout-unzipped/")).unwrap();
+        let paths =
+            recursively_collect_filenames(Path::new("./test-assets/takeout-unzipped/")).unwrap();
 
         assert_eq!(paths.len(), 8);
     }
 
     #[test]
     fn collect_filenames_returns_valid_paths() {
-        let paths = recursively_collect_filenames(Path::new("./test-assets/takeout-unzipped/")).unwrap();
+        let paths =
+            recursively_collect_filenames(Path::new("./test-assets/takeout-unzipped/")).unwrap();
 
         for p in paths {
             assert!(p.exists());

@@ -1,7 +1,3 @@
-use std::path::Path;
-
-use little_exif::metadata::Metadata;
-use little_exif::exif_tag::ExifTag;
 use serde::{Deserialize, Serialize};
 
 #[derive(Debug, Serialize, Deserialize)]
@@ -112,13 +108,19 @@ mod tests {
     #[test]
     fn photo_taken_time_is_present() {
         let exif = TakeoutExif::try_from(TEST_FULL_JSON).unwrap();
-        assert_eq!(exif.photo_taken_time.unwrap().formatted.unwrap(), "Jul 17, 2019, 8:28:49 PM UTC");
+        assert_eq!(
+            exif.photo_taken_time.unwrap().formatted.unwrap(),
+            "Jul 17, 2019, 8:28:49 PM UTC"
+        );
     }
 
     #[test]
     fn creation_time_is_present() {
         let exif = TakeoutExif::try_from(TEST_FULL_JSON).unwrap();
-        assert_eq!(exif.creation_time.unwrap().formatted.unwrap(), "Jul 18, 2019, 10:55:29 PM UTC");
+        assert_eq!(
+            exif.creation_time.unwrap().formatted.unwrap(),
+            "Jul 18, 2019, 10:55:29 PM UTC"
+        );
     }
 
     #[test]

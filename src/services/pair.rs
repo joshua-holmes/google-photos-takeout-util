@@ -1,5 +1,9 @@
-use std::{collections::{HashMap, HashSet}, fs, io::Read, path::{Path, PathBuf}};
-
+use std::{
+    collections::{HashMap, HashSet},
+    fs,
+    io::Read,
+    path::{Path, PathBuf},
+};
 
 /// A struct for holding the paths of json files and their corresponding images. It is possible for a json file to be
 /// linked to up to 2 images, despite the implication of the word "pair".
@@ -62,16 +66,25 @@ pub fn create_pairs(set: HashSet<PathBuf>) -> HashMap<String, Pair> {
         let stem = p.file_stem().unwrap().to_str().unwrap();
         let (key, component) = if stem.len() >= 7 && &stem[stem.len() - 7..] == "-edited" {
             let edited_idx = p.to_str().unwrap().find("-edited").unwrap();
-            (p.to_str().unwrap()[0..edited_idx].to_string(), PairComponent::ImgEdited)
+            (
+                p.to_str().unwrap()[0..edited_idx].to_string(),
+                PairComponent::ImgEdited,
+            )
         } else if p.extension().unwrap().to_str().unwrap() == "json" {
             let img_name = Path::new(p.file_stem().unwrap());
             let naked_key = img_name.file_stem().unwrap();
             let dir = p.parent().unwrap_or(Path::new(""));
-            (dir.join(naked_key).to_str().unwrap().to_string(), PairComponent::Json)
+            (
+                dir.join(naked_key).to_str().unwrap().to_string(),
+                PairComponent::Json,
+            )
         } else {
             let naked_key = p.file_stem().unwrap();
             let dir = p.parent().unwrap_or(Path::new(""));
-            (dir.join(naked_key).to_str().unwrap().to_string(), PairComponent::Img)
+            (
+                dir.join(naked_key).to_str().unwrap().to_string(),
+                PairComponent::Img,
+            )
         };
 
         let pair = pairs.entry(key).or_insert(Pair::new());
@@ -94,9 +107,7 @@ mod tests {
     #[test]
     fn img_only() {
         let img = PathBuf::from("my_img.jpg");
-        let pairs = create_pairs(HashSet::from([
-            img.clone(),
-        ]));
+        let pairs = create_pairs(HashSet::from([img.clone()]));
 
         let pair = pairs.get("my_img").unwrap();
         assert!(pair.img.is_some());
@@ -107,9 +118,7 @@ mod tests {
     #[test]
     fn img_edited_only() {
         let img = PathBuf::from("my_img-edited.jpg");
-        let pairs = create_pairs(HashSet::from([
-            img.clone(),
-        ]));
+        let pairs = create_pairs(HashSet::from([img.clone()]));
 
         let pair = pairs.get("my_img").unwrap();
         assert!(pair.img.is_none());
@@ -120,9 +129,7 @@ mod tests {
     #[test]
     fn json_only() {
         let json = PathBuf::from("my_img.jpg.json");
-        let pairs = create_pairs(HashSet::from([
-            json.clone(),
-        ]));
+        let pairs = create_pairs(HashSet::from([json.clone()]));
 
         let pair = pairs.get("my_img").unwrap();
         assert!(pair.img.is_none());
@@ -133,9 +140,7 @@ mod tests {
     #[test]
     fn img_only_nested() {
         let img = PathBuf::from("some/dir/my_img.jpg");
-        let pairs = create_pairs(HashSet::from([
-            img.clone(),
-        ]));
+        let pairs = create_pairs(HashSet::from([img.clone()]));
 
         let pair = pairs.get("some/dir/my_img").unwrap();
         assert_eq!(pair.img.as_ref().unwrap(), &img);
@@ -146,9 +151,7 @@ mod tests {
     #[test]
     fn img_edited_only_nested() {
         let img = PathBuf::from("some/dir/my_img-edited.jpg");
-        let pairs = create_pairs(HashSet::from([
-            img.clone(),
-        ]));
+        let pairs = create_pairs(HashSet::from([img.clone()]));
 
         let pair = pairs.get("some/dir/my_img").unwrap();
         assert!(pair.img.is_none());
@@ -159,9 +162,7 @@ mod tests {
     #[test]
     fn json_only_nested() {
         let json = PathBuf::from("some/dir/my_img.jpg.json");
-        let pairs = create_pairs(HashSet::from([
-            json.clone(),
-        ]));
+        let pairs = create_pairs(HashSet::from([json.clone()]));
 
         let pair = pairs.get("some/dir/my_img").unwrap();
         assert!(pair.img.is_none());
@@ -172,9 +173,7 @@ mod tests {
     #[test]
     fn img_only_name_with_dots() {
         let img = PathBuf::from("my_img.some.dots.jpg");
-        let pairs = create_pairs(HashSet::from([
-            img.clone(),
-        ]));
+        let pairs = create_pairs(HashSet::from([img.clone()]));
 
         let pair = pairs.get("my_img.some.dots").unwrap();
         assert_eq!(pair.img.as_ref().unwrap(), &img);
@@ -185,9 +184,7 @@ mod tests {
     #[test]
     fn img_edited_only_name_with_dots() {
         let img = PathBuf::from("my_img.some.dots-edited.jpg");
-        let pairs = create_pairs(HashSet::from([
-            img.clone(),
-        ]));
+        let pairs = create_pairs(HashSet::from([img.clone()]));
 
         let pair = pairs.get("my_img.some.dots").unwrap();
         assert!(pair.img.is_none());
@@ -198,9 +195,7 @@ mod tests {
     #[test]
     fn json_only_name_with_dots() {
         let json = PathBuf::from("my_img.some.dots.jpg.json");
-        let pairs = create_pairs(HashSet::from([
-            json.clone(),
-        ]));
+        let pairs = create_pairs(HashSet::from([json.clone()]));
 
         let pair = pairs.get("my_img.some.dots").unwrap();
         assert!(pair.img.is_none());
@@ -212,10 +207,7 @@ mod tests {
     fn pair_without_img() {
         let json = PathBuf::from("my_img.jpg.json");
         let img = PathBuf::from("my_img-edited.jpg");
-        let pairs = create_pairs(HashSet::from([
-            json.clone(),
-            img.clone(),
-        ]));
+        let pairs = create_pairs(HashSet::from([json.clone(), img.clone()]));
 
         assert_eq!(pairs.len(), 1);
 
@@ -229,10 +221,7 @@ mod tests {
     fn pair_without_img_edited() {
         let json = PathBuf::from("my_img.jpg.json");
         let img = PathBuf::from("my_img.jpg");
-        let pairs = create_pairs(HashSet::from([
-            json.clone(),
-            img.clone(),
-        ]));
+        let pairs = create_pairs(HashSet::from([json.clone(), img.clone()]));
 
         assert_eq!(pairs.len(), 1);
 
@@ -246,10 +235,7 @@ mod tests {
     fn pair_without_json() {
         let img = PathBuf::from("my_img.jpg");
         let img_edited = PathBuf::from("my_img-edited.jpg");
-        let pairs = create_pairs(HashSet::from([
-            img.clone(),
-            img_edited.clone(),
-        ]));
+        let pairs = create_pairs(HashSet::from([img.clone(), img_edited.clone()]));
 
         assert_eq!(pairs.len(), 1);
 
@@ -282,10 +268,7 @@ mod tests {
     fn multiple_pairs_same_dir() {
         let img1 = PathBuf::from("my_img_a.jpg");
         let img2 = PathBuf::from("my_img_b.jpg");
-        let pairs = create_pairs(HashSet::from([
-            img1.clone(),
-            img2.clone(),
-        ]));
+        let pairs = create_pairs(HashSet::from([img1.clone(), img2.clone()]));
 
         assert_eq!(pairs.len(), 2);
 
@@ -299,10 +282,7 @@ mod tests {
     fn multiple_pairs_different_dir() {
         let img1 = PathBuf::from("dir/a/my_img.jpg");
         let img2 = PathBuf::from("dir/b/my_img.jpg");
-        let pairs = create_pairs(HashSet::from([
-            img1.clone(),
-            img2.clone(),
-        ]));
+        let pairs = create_pairs(HashSet::from([img1.clone(), img2.clone()]));
 
         assert_eq!(pairs.len(), 2);
 
