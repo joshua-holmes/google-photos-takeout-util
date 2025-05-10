@@ -1,14 +1,14 @@
 use crate::AppState;
 use eframe::egui;
-use std::{path::PathBuf, sync::mpsc, thread::JoinHandle, time::Duration};
+use std::{path::PathBuf, time::Duration};
 
 use super::{ViewNavigation, Viewable};
+use crate::helpers::Receiver;
 
 #[derive(Default)]
 pub struct FilePicker {
     dropped_files: Vec<egui::DroppedFile>,
-    rx: Option<mpsc::Receiver<PathBuf>>,
-    handle: Option<JoinHandle<()>>,
+    receiver: Option<Receiver<PathBuf>>
 }
 impl Viewable for FilePicker {
     fn show(&mut self, app: &mut AppState, ctx: &egui::Context, ui: &mut egui::Ui) -> Option<ViewNavigation> {
@@ -24,19 +24,21 @@ impl Viewable for FilePicker {
                         }
                     }
                 });
-                self.rx = Some(rx);
-                self.handle = Some(handle);
+                self.receiver = Some(Receiver {
+                    rx,
+                    handle,
+                });
             }
 
-            if let Some(picked_path) = self
-                .rx
-                .as_ref()
-                .and_then(|rx| rx.recv_timeout(Duration::new(0, 1_000_000)).ok())
-            {
-                app.picked_path = Some(picked_path);
-                self.rx = None;
-                self.handle.take().unwrap().join().unwrap();
-                return Some(ViewNavigation::Next);
+            if let Some(receiver) = self.receiver.take() {
+                if let Ok(picked_path) = receiver.rx.recv() {
+                    app.picked_path = Some(picked_path);
+                    receiver.handle.join().unwrap();
+                    return Some(ViewNavigation::Next);
+                } else {
+                    // put receiver back if not used
+                    self.receiver = Some(receiver);
+                }
             }
 
             // Show dropped files (if any):

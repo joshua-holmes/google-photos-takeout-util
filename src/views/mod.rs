@@ -19,17 +19,12 @@ pub struct View {
     pub next: Option<Rc<RefCell<View>>>,
     pub item: Box<dyn Viewable>,
 }
-impl View {
-    pub fn show(&mut self, app: &mut AppState, ctx: &egui::Context, ui: &mut egui::Ui) -> Option<ViewNavigation> {
-        self.item.show(app, ctx, ui)
-    }
-}
 impl Default for View {
     fn default() -> Self {
         // list of view in order from first to last
         let views: [Box<dyn Viewable>; 3] = [
             Box::new(FilePicker::default()),
-            Box::new(ApplyMetadata),
+            Box::new(ApplyMetadata::default()),
             Box::new(Success),
         ];
 

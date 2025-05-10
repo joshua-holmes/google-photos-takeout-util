@@ -1,3 +1,5 @@
+use std::path::Path;
+
 use serde::{Deserialize, Serialize};
 
 #[derive(Debug, Serialize, Deserialize)]
@@ -11,10 +13,12 @@ pub struct TakeoutExif {
     people: Option<Vec<Person>>,
     url: Option<String>,
 }
-impl TryFrom<&str> for TakeoutExif {
-    type Error = JsonParseError;
+impl TakeoutExif {
+    pub fn apply_to_image(&self, path: &Path) {
+        todo!()
+    }
 
-    fn try_from(value: &str) -> Result<Self, Self::Error> {
+    pub fn from_json(value: &str) -> Result<Self, JsonParseError> {
         serde_json::from_str(value).map_err(JsonParseError::from)
     }
 }

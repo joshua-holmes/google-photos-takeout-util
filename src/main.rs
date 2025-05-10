@@ -1,13 +1,14 @@
 #![cfg_attr(not(debug_assertions), windows_subsystem = "windows")] // hide console window on Windows in release
 #![allow(rustdoc::missing_crate_level_docs)] // it's an example
 
-use std::{cell::RefCell, path::PathBuf, rc::Rc, sync::mpsc, thread::JoinHandle};
+use std::{cell::RefCell, path::PathBuf, rc::Rc};
 
 use eframe::egui;
 use views::{View, ViewNavigation};
 
 mod services;
 mod views;
+mod helpers;
 
 fn main() -> eframe::Result {
     let options = eframe::NativeOptions {
