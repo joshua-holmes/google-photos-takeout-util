@@ -1,10 +1,10 @@
 #![cfg_attr(not(debug_assertions), windows_subsystem = "windows")] // hide console window on Windows in release
 #![allow(rustdoc::missing_crate_level_docs)] // it's an example
 
-use std::{path::PathBuf, sync::mpsc, thread::JoinHandle};
+use std::{cell::RefCell, path::PathBuf, rc::Rc, sync::mpsc, thread::JoinHandle};
 
 use eframe::egui;
-use views::View;
+use views::{View, ViewNavigation};
 
 mod services;
 mod views;
@@ -27,22 +27,33 @@ fn main() -> eframe::Result {
 
 #[derive(Default)]
 struct MyApp {
-    current_view: View,
+    current_view: Rc<RefCell<View>>,
     app_state: AppState,
 }
 
 #[derive(Default)]
 struct AppState {
-    dropped_files: Vec<egui::DroppedFile>,
     picked_path: Option<PathBuf>,
-    rx: Option<mpsc::Receiver<PathBuf>>,
-    handle: Option<JoinHandle<()>>,
 }
 
 impl eframe::App for MyApp {
     fn update(&mut self, ctx: &egui::Context, _frame: &mut eframe::Frame) {
-        egui::CentralPanel::default().show(ctx, |ui| {
-            self.current_view.show(&mut self.app_state, ctx, ui);
+        let nav = egui::CentralPanel::default().show(ctx, |ui| {
+            let mut cur_view = self.current_view.borrow_mut();
+            cur_view.item.show(&mut self.app_state, ctx, ui)
         });
+
+        if let Some(nav) = nav.inner {
+            match nav {
+                ViewNavigation::Prev => {
+                    let prev = self.current_view.borrow().prev.as_ref().unwrap().clone();
+                    self.current_view = prev;
+                }
+                ViewNavigation::Next => {
+                    let next = self.current_view.borrow().next.as_ref().unwrap().clone();
+                    self.current_view = next;
+                }
+            };
+        }
     }
 }

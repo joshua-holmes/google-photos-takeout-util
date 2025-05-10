@@ -1,13 +1,18 @@
 use crate::AppState;
 use eframe::egui;
-use std::time::Duration;
+use std::{path::PathBuf, sync::mpsc, thread::JoinHandle, time::Duration};
 
-use super::Viewable;
+use super::{ViewNavigation, Viewable};
 
-pub struct FilePicker;
+#[derive(Default)]
+pub struct FilePicker {
+    dropped_files: Vec<egui::DroppedFile>,
+    rx: Option<mpsc::Receiver<PathBuf>>,
+    handle: Option<JoinHandle<()>>,
+}
 impl Viewable for FilePicker {
-    fn show(&self, app: &mut AppState, ctx: &egui::Context, ui: &mut egui::Ui) {
-        ui.vertical_centered_justified(|ui| {
+    fn show(&mut self, app: &mut AppState, ctx: &egui::Context, ui: &mut egui::Ui) -> Option<ViewNavigation> {
+        let nav = ui.vertical_centered_justified(|ui| {
             ui.label("Drag-and-drop files onto the window!");
             if ui.button("Open file…").clicked() {
                 let (tx, rx) = std::sync::mpsc::channel();
@@ -19,33 +24,27 @@ impl Viewable for FilePicker {
                         }
                     }
                 });
-                app.rx = Some(rx);
-                app.handle = Some(handle);
+                self.rx = Some(rx);
+                self.handle = Some(handle);
             }
 
-            if let Some(picked_path) = app
+            if let Some(picked_path) = self
                 .rx
                 .as_ref()
                 .and_then(|rx| rx.recv_timeout(Duration::new(0, 1_000_000)).ok())
             {
                 app.picked_path = Some(picked_path);
-                app.rx = None;
-                app.handle.take().unwrap().join().unwrap();
-            }
-
-            if let Some(picked_path) = app.picked_path.as_ref() {
-                ui.horizontal(|ui| {
-                    ui.label("Picked file:");
-                    ui.monospace(picked_path.display().to_string());
-                });
+                self.rx = None;
+                self.handle.take().unwrap().join().unwrap();
+                return Some(ViewNavigation::Next);
             }
 
             // Show dropped files (if any):
-            if !app.dropped_files.is_empty() {
+            if !self.dropped_files.is_empty() {
                 ui.group(|ui| {
                     ui.label("Dropped files:");
 
-                    for file in &app.dropped_files {
+                    for file in &self.dropped_files {
                         let mut info = if let Some(path) = &file.path {
                             path.display().to_string()
                         } else if !file.name.is_empty() {
@@ -69,6 +68,8 @@ impl Viewable for FilePicker {
                     }
                 });
             }
+
+            None
         });
 
         preview_files_being_dropped(ctx);
@@ -76,9 +77,11 @@ impl Viewable for FilePicker {
         // Collect dropped files:
         ctx.input(|i| {
             if !i.raw.dropped_files.is_empty() {
-                app.dropped_files.clone_from(&i.raw.dropped_files);
+                self.dropped_files.clone_from(&i.raw.dropped_files);
             }
         });
+
+        nav.inner
     }
 }
 

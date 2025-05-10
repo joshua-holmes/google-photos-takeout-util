@@ -5,6 +5,7 @@ use std::{
 };
 
 /// Unzips given zip file, creating a new directory for unzipped contents and only keeping files (not empty directories).
+/// Returns directory with extracted files.
 pub fn unzip(zip_path: &Path) -> std::path::PathBuf {
     let file = fs::File::open(zip_path).unwrap();
     let mut archive = zip::ZipArchive::new(file).unwrap();

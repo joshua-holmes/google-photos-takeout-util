@@ -1,39 +1,64 @@
+use std::{cell::RefCell, rc::Rc};
+
 use eframe::egui;
+
+mod file_picker;
+mod apply_metadata;
+mod success;
+
 use file_picker::FilePicker;
+use apply_metadata::ApplyMetadata;
+use success::Success;
 
-use crate::{AppState, MyApp};
-
-pub mod file_picker;
+use crate::AppState;
 
 /// A double linked list to allow traversing to prev and next views easily. Also allows inserting new ones with O(1)
 /// runtime.
 pub struct View {
-    pub prev: Option<Box<View>>,
-    pub next: Option<Box<View>>,
-    item: Box<dyn Viewable>,
+    pub prev: Option<Rc<RefCell<View>>>,
+    pub next: Option<Rc<RefCell<View>>>,
+    pub item: Box<dyn Viewable>,
 }
 impl View {
-    /// Insert view into linked list of views
-    pub fn insert(&mut self, mut view: View) {
-        let next = self.next.take();
-        view.next = next;
-        self.next = Some(Box::new(view));
-    }
-
-    pub fn show(&mut self, app: &mut AppState, ctx: &egui::Context, ui: &mut egui::Ui) {
-        self.item.show(app, ctx, ui);
+    pub fn show(&mut self, app: &mut AppState, ctx: &egui::Context, ui: &mut egui::Ui) -> Option<ViewNavigation> {
+        self.item.show(app, ctx, ui)
     }
 }
 impl Default for View {
     fn default() -> Self {
-        Self {
-            prev: None,
-            next: None,
-            item: Box::new(FilePicker),
+        // list of view in order from first to last
+        let views: [Box<dyn Viewable>; 3] = [
+            Box::new(FilePicker::default()),
+            Box::new(ApplyMetadata),
+            Box::new(Success),
+        ];
+
+        // build views as type `View`
+        let mut root = None;
+        for view in views.into_iter().rev() {
+            let mut v = Self {
+                prev: None,
+                next: None,
+                item: view,
+            };
+
+            if let Some(root) = root {
+                v.next = Some(Rc::new(RefCell::new(root)));
+            }
+
+            root = Some(v);
         }
+
+        root.expect("No views were created! Please report unexpected this bug.")
     }
 }
 
 pub trait Viewable {
-    fn show(&self, app: &mut AppState, ctx: &egui::Context, ui: &mut egui::Ui);
+    fn show(&mut self, app: &mut AppState, ctx: &egui::Context, ui: &mut egui::Ui) -> Option<ViewNavigation>;
+}
+
+#[derive(Clone)]
+pub enum ViewNavigation {
+    Prev,
+    Next,
 }
