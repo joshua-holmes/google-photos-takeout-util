@@ -1,9 +1,9 @@
 use crate::AppState;
 use eframe::egui;
-use std::{path::PathBuf, time::Duration};
+use std::path::PathBuf;
 
 use super::{ViewNavigation, Viewable};
-use crate::helpers::Receiver;
+use super::utils::Receiver;
 
 #[derive(Default)]
 pub struct FilePicker {

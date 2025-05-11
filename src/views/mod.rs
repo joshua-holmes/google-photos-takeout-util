@@ -5,6 +5,7 @@ use eframe::egui;
 mod file_picker;
 mod apply_metadata;
 mod success;
+pub mod utils;
 
 use file_picker::FilePicker;
 use apply_metadata::ApplyMetadata;

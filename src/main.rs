@@ -8,7 +8,6 @@ use views::{View, ViewNavigation};
 
 mod services;
 mod views;
-mod helpers;
 
 fn main() -> eframe::Result {
     let options = eframe::NativeOptions {
