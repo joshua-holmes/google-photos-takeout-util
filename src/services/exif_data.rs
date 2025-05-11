@@ -1,6 +1,10 @@
-use std::path::Path;
+use std::{path::Path, str::FromStr};
 
+use chrono;
+use little_exif::{exif_tag::ExifTag, metadata::Metadata};
 use serde::{Deserialize, Serialize};
+
+static EXIF_TIMESTAMP_FMT: &str = "%Y:%m:%d %H:%M:%S%z";
 
 #[derive(Debug, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
@@ -15,7 +19,22 @@ pub struct TakeoutExif {
 }
 impl TakeoutExif {
     pub fn apply_to_image(&self, path: &Path) {
-        todo!()
+        let mut tags = Vec::new();
+        if let Some(description) = self.description.clone() {
+            tags.push(ExifTag::ImageDescription(description));
+        }
+        if let Some(timestamp) = self.creation_time.as_ref().and_then(|t| t.to_datetime()) {
+            let timestamp_formatted = timestamp.format(EXIF_TIMESTAMP_FMT).to_string();
+            tags.push(ExifTag::DateTimeOriginal(timestamp_formatted.clone()));
+            tags.push(ExifTag::CreateDate(timestamp_formatted.clone()));
+            tags.push(ExifTag::ModifyDate(timestamp_formatted));
+        }
+
+        let mut metadata = Metadata::new();
+        for t in tags {
+            metadata.set_tag(t);
+        }
+        metadata.write_to_file(path);
     }
 
     pub fn from_json(value: &str) -> Result<Self, JsonParseError> {
@@ -27,6 +46,17 @@ impl TakeoutExif {
 pub struct TimeStamp {
     timestamp: Option<String>,
     formatted: Option<String>,
+}
+impl TimeStamp {
+    /// Convert to [`chrono::DateTime`] if the necessary fields are present and parsing is successful.
+    /// Otherwise, return `None`.
+    // TODO: Maybe return `Result` instead for better communication about why parsing failed.
+    fn to_datetime(&self) -> Option<chrono::DateTime<chrono::Utc>> {
+        self.timestamp
+            .as_ref()
+            .and_then(|t| t.parse().ok())
+            .and_then(|t| chrono::DateTime::from_timestamp(t, 0))
+    }
 }
 
 #[derive(Debug, Serialize, Deserialize)]
