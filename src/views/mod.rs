@@ -2,13 +2,13 @@ use std::{cell::RefCell, rc::Rc};
 
 use eframe::egui;
 
-mod file_picker;
 mod apply_metadata;
+mod file_picker;
 mod success;
 pub mod utils;
 
-use file_picker::FilePicker;
 use apply_metadata::ApplyMetadata;
+use file_picker::FilePicker;
 use success::Success;
 
 use crate::AppState;
@@ -50,7 +50,12 @@ impl Default for View {
 }
 
 pub trait Viewable {
-    fn show(&mut self, app: &mut AppState, ctx: &egui::Context, ui: &mut egui::Ui) -> Option<ViewNavigation>;
+    fn show(
+        &mut self,
+        app: &mut AppState,
+        ctx: &egui::Context,
+        ui: &mut egui::Ui,
+    ) -> Option<ViewNavigation>;
 }
 
 #[derive(Clone)]

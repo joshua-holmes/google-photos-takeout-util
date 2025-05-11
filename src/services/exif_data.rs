@@ -111,7 +111,7 @@ mod tests {
 
     #[test]
     fn photo_taken_time_is_present() {
-        let exif = TakeoutExif::try_from(TEST_FULL_JSON).unwrap();
+        let exif = TakeoutExif::from_json(TEST_FULL_JSON).unwrap();
         assert_eq!(
             exif.photo_taken_time.unwrap().formatted.unwrap(),
             "Jul 17, 2019, 8:28:49 PM UTC"
@@ -120,7 +120,7 @@ mod tests {
 
     #[test]
     fn creation_time_is_present() {
-        let exif = TakeoutExif::try_from(TEST_FULL_JSON).unwrap();
+        let exif = TakeoutExif::from_json(TEST_FULL_JSON).unwrap();
         assert_eq!(
             exif.creation_time.unwrap().formatted.unwrap(),
             "Jul 18, 2019, 10:55:29 PM UTC"
@@ -129,7 +129,7 @@ mod tests {
 
     #[test]
     fn geo_data_is_present() {
-        let exif = TakeoutExif::try_from(TEST_FULL_JSON).unwrap();
+        let exif = TakeoutExif::from_json(TEST_FULL_JSON).unwrap();
         let geo_data = exif.geo_data.as_ref().unwrap();
         assert_eq!(geo_data.latitude.unwrap(), 10.0);
         assert_eq!(geo_data.longitude.unwrap(), 92.9);
@@ -140,13 +140,13 @@ mod tests {
 
     #[test]
     fn does_not_fail_when_little_data_is_present() {
-        let exif = TakeoutExif::try_from(TEST_EMPTY_JSON).unwrap();
+        let exif = TakeoutExif::from_json(TEST_EMPTY_JSON).unwrap();
         assert!(exif.creation_time.is_none());
     }
 
     #[test]
     fn fails_for_invalid_json() {
-        let exif = TakeoutExif::try_from(TEST_INVALID_JSON);
+        let exif = TakeoutExif::from_json(TEST_INVALID_JSON);
         assert!(exif.is_err());
     }
 }

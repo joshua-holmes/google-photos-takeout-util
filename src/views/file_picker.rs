@@ -2,16 +2,21 @@ use crate::AppState;
 use eframe::egui;
 use std::path::PathBuf;
 
-use super::{ViewNavigation, Viewable};
 use super::utils::Receiver;
+use super::{ViewNavigation, Viewable};
 
 #[derive(Default)]
 pub struct FilePicker {
     dropped_files: Vec<egui::DroppedFile>,
-    receiver: Option<Receiver<PathBuf>>
+    receiver: Option<Receiver<PathBuf>>,
 }
 impl Viewable for FilePicker {
-    fn show(&mut self, app: &mut AppState, ctx: &egui::Context, ui: &mut egui::Ui) -> Option<ViewNavigation> {
+    fn show(
+        &mut self,
+        app: &mut AppState,
+        ctx: &egui::Context,
+        ui: &mut egui::Ui,
+    ) -> Option<ViewNavigation> {
         let nav = ui.vertical_centered_justified(|ui| {
             ui.label("Drag-and-drop files onto the window!");
             if ui.button("Open file…").clicked() {
@@ -24,10 +29,7 @@ impl Viewable for FilePicker {
                         }
                     }
                 });
-                self.receiver = Some(Receiver {
-                    rx,
-                    handle,
-                });
+                self.receiver = Some(Receiver { rx, handle });
             }
 
             if let Some(receiver) = self.receiver.take() {
