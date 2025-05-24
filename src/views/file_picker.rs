@@ -1,6 +1,7 @@
 use crate::AppState;
 use eframe::egui;
 use std::path::PathBuf;
+use std::time::Duration;
 
 use super::utils::Receiver;
 use super::{ViewNavigation, Viewable};
@@ -33,7 +34,7 @@ impl Viewable for FilePicker {
             }
 
             if let Some(receiver) = self.receiver.take() {
-                if let Ok(picked_path) = receiver.rx.recv() {
+                if let Ok(picked_path) = receiver.rx.recv_timeout(Duration::from_millis(1)) {
                     app.picked_path = Some(picked_path);
                     receiver.handle.join().unwrap();
                     return Some(ViewNavigation::Next);
