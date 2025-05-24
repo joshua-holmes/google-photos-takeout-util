@@ -1,4 +1,4 @@
-use std::{sync::mpsc, thread};
+use std::{sync::mpsc, thread, time::Duration};
 
 use super::utils::Receiver;
 use crate::{AppState, services};
@@ -18,8 +18,9 @@ impl Viewable for ApplyMetadata {
         ui: &mut egui::Ui,
     ) -> Option<ViewNavigation> {
         if let Some(receiver) = self.receiver.take() {
-            if receiver.rx.recv().is_ok() {
+            if receiver.rx.recv_timeout(Duration::from_millis(1)).is_ok() {
                 receiver.handle.join().unwrap();
+                return Some(ViewNavigation::Next);
             } else {
                 self.receiver = Some(receiver);
             }

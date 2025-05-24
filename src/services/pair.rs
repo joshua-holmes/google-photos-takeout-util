@@ -45,6 +45,7 @@ impl Pair {
     }
 }
 
+#[derive(Debug)]
 pub enum PairError {
     IoError(std::io::Error),
     Utf8ParsingError(std::string::FromUtf8Error),

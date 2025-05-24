@@ -1,6 +1,5 @@
-use std::{path::Path, str::FromStr};
+use std::path::Path;
 
-use chrono;
 use little_exif::{exif_tag::ExifTag, metadata::Metadata};
 use serde::{Deserialize, Serialize};
 

@@ -11,6 +11,10 @@ impl Viewable for Success {
         ctx: &egui::Context,
         ui: &mut egui::Ui,
     ) -> Option<ViewNavigation> {
+        ui.centered_and_justified(|ui| {
+            ui.heading("Success!");
+            ui.label("You can close the application now.");
+        });
         None
     }
 }

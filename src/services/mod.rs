@@ -9,7 +9,9 @@ pub fn extract_and_apply_metadata(zip_path: &Path) {
     let file_names = utils::recursively_collect_filenames(&working_dir).unwrap();
     let pairs = pair::create_pairs(file_names);
     for pair in pairs.values() {
-        let json = pair.read_json().and_then(|inner| inner.ok()).unwrap();
+        let json = if let Some(json) = pair.read_json() {
+            json.unwrap()
+        } else { continue; };
         let exif = exif_data::TakeoutExif::from_json(json.as_str()).unwrap();
         for img in [&pair.img, &pair.img_edited]
             .into_iter()
