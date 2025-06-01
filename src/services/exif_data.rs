@@ -1,4 +1,4 @@
-use std::path::Path;
+use std::{io, path::Path};
 
 use little_exif::{exif_tag::ExifTag, metadata::Metadata};
 use serde::{Deserialize, Serialize};
@@ -17,7 +17,7 @@ pub struct TakeoutExif {
     url: Option<String>,
 }
 impl TakeoutExif {
-    pub fn apply_to_image(&self, path: &Path) {
+    pub fn apply_to_image(&self, path: &Path) -> io::Result<()> {
         let mut tags = Vec::new();
         if let Some(description) = self.description.clone() {
             tags.push(ExifTag::ImageDescription(description));
@@ -33,7 +33,8 @@ impl TakeoutExif {
         for t in tags {
             metadata.set_tag(t);
         }
-        metadata.write_to_file(path);
+        metadata.write_to_file(path)?;
+        Ok(())
     }
 
     pub fn from_json(value: &str) -> Result<Self, JsonParseError> {
